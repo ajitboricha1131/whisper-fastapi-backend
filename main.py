@@ -1,6 +1,6 @@
 import os
 import tempfile
-from faster_whisper import WhisperModel
+import whisper
 from pathlib import Path
 from fastapi import FastAPI, UploadFile, File, HTTPException
 from fastapi.responses import JSONResponse
@@ -21,8 +21,8 @@ async def load_model():
     """Load Whisper model at startup"""
     global model
     try:
-        logger.info("Loading Faster-Whisper model (tiny)...")
-        model = WhisperModel("tiny", device="cpu", compute_type="int8")
+        logger.info("Loading Whisper model (tiny)...")
+        model = whisper.load_model("tiny")
         logger.info("Model loaded successfully")
     except Exception as e:
         logger.error(f"Failed to load model: {e}")
@@ -72,9 +72,9 @@ async def transcribe(file: UploadFile = File(...)):
         
         logger.info(f"Processing file: {file.filename}")
         
-        # Transcribe using faster-whisper
-        segments, info = model.transcribe(temp_file, language="en")
-        transcribed_text = " ".join([segment.text for segment in segments]).strip()
+        # Transcribe using Whisper
+        result = model.transcribe(temp_file, language="en")
+        transcribed_text = result.get("text", "").strip()
         
         logger.info(f"Transcription completed. Length: {len(transcribed_text)} chars")
         
